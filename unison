@@ -26,14 +26,14 @@ function macho {
   cd $dir
   python macho.py
 }
-echo "What version of osx are you using? (10.10.4 or 10.10.5)"
-read answer
-if [ $answer = 10.10.4 ];
+
+read -p "What version of osx are you using? (10.10.4 or 10.10.5)" osanswer
+if [ $osanswer = "10.10.4" ];
   then
     rocket
   else
 fi
-if [ $answer = 10.10.5 ];
+if [ $osanswer = "10.10.5" ];
   then
     macho
   else
